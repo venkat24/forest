@@ -3,16 +3,17 @@
 //Canvas Boilerplate
 var canvas = document.createElement("canvas");
 var context = canvas.getContext("2d");
-canvas.width = 4000;
-canvas.height = 4000;
-var boardN = 100;
+canvas.width = 6000;
+canvas.height = 6000;
+var boardN = 150;
+var refreshRate = 20;
 var blockSize = 40;
 
 //Spawn Rates
-var treeSpawnRate = 0.3;
-var lumberJackSpawnRate = 0.05;
-var bearSpawnRate = 0.02;
-var saplingSpawnRate=0.05;
+var treeSpawnRate = 0.4;
+var lumberJackSpawnRate = 0.03;
+var bearSpawnRate = 0.0;
+var saplingSpawnRate=0.1;
 
 //Global Vars
 var treeLifeList = new Array(boardN);
@@ -90,7 +91,7 @@ function drawForest () {
 				case 'L':
 					context.fillStyle = 'crimson'; break;
 				case 'B':
-					context.fillStyle = 'brown'; break;
+					context.fillStyle = 'turquoise'; break;
 				case 'X':
 					context.fillStyle = 'lightgray'; break;
 			}
@@ -147,12 +148,12 @@ function getAdjacentSquares (x,y) {
 	return [n,s,w,e];
 }
 function mainLoop () {
-	//Tree Logic
 	var squares;
 	var possibleSaplings=[];
+	var repeat=3;
 	for(var i = 0; i<boardN ; i++) {''
 		for (var j = 0; j < boardN; j++) {
-			if (forest[i][j] == 'T') {
+			if (forest[i][j] == 'T') {				//TREE MECHANISM
 				squares = getAdjacentSquares(i,j);
 				possibleSaplings=[];
 				for(var k = 0; k<4 ; k++) {
@@ -169,9 +170,49 @@ function mainLoop () {
 				}
 				var saplingCoords = possibleSaplings[Math.floor(Math.random()*possibleSaplings.length)];
 				if (saplingCoords != null && Math.random() < saplingSpawnRate) {
-					if (forest[saplingCoords[0]][saplingCoords[1]]=='X') {
-						forest[saplingCoords[0]][saplingCoords[1]]='S';
+					forest[saplingCoords[0]][saplingCoords[1]]='S';
+				}
+
+			} else if (forest[i][j]=='L') {			//LUMBERJACK MECHANISM
+				availableSquares = getAdjacentSquares(i,j);
+				//console.log(availableSquares);
+				var choppableTreeIndices = [];
+				var movableTreeIndices = []
+				var lumberJackChoppingPositionIndex = 0;
+				var lumberJackMovementPositionIndex = 0;
+				var treeToChop=[0,0];
+				var positionToMove=[0,0];
+				if (availableSquares.indexOf('T') >=0 || availableSquares.indexOf('E') >=0 ) {
+					for(var k=0 ; k<4; k++ ) {
+						if (availableSquares[k]=='T' || availableSquares[k]=='E') {
+							choppableTreeIndices.push(k);
+						}
+						lumberJackChoppingPositionIndex = choppableTreeIndices[Math.floor(Math.random()*choppableTreeIndices.length)];
+						switch(lumberJackChoppingPositionIndex) {
+							case 0:treeToChop=[i,j-1]; break;
+							case 1:treeToChop=[i,j+1]; break;
+							case 2:treeToChop=[i+1,j]; break;
+							case 3:treeToChop=[i-1,j]; break;
+						}
+						//CHOP THE TREE
+						forest[treeToChop[0]][treeToChop[1]]='X';
+						//break; //Enable ths after ading while loop
 					}
+				} else if (availableSquares.indexOf('X') >=0 ) {
+					for(var k=0 ; k<4; k++ ) {
+						if(availableSquares[k] == 'X') {
+							movableTreeIndices.push(k);
+						}
+					}
+					lumberJackMovementPositionIndex = movableTreeIndices[Math.floor(Math.random()*movableTreeIndices.length)];
+					switch(lumberJackMovementPositionIndex) {
+						case 0:positionToMove=[i,j-1]; break;
+						case 1:positionToMove=[i,j+1]; break;
+						case 2:positionToMove=[i+1,j]; break;
+						case 3:positionToMove=[i-1,j]; break;
+					}
+					forest[positionToMove[0]][positionToMove[1]]='L';
+					forest[i][j]='X';
 				}
 			}
 		}
@@ -186,5 +227,4 @@ makeBoard();
 setTreeLifeList();
 initialSpawn();
 drawForest();
-mainLoop();
-setInterval(mainLoop,10);
+setInterval(mainLoop,refreshRate);
