@@ -3,20 +3,26 @@
 //Canvas Boilerplate
 var canvas = document.createElement("canvas");
 var context = canvas.getContext("2d");
-canvas.width = 3000;
-canvas.height = 3000;
-var boardN = 10;
+canvas.width = 4000;
+canvas.height = 4000;
+var boardN = 100;
 var blockSize = 40;
 
 //Spawn Rates
 var treeSpawnRate = 0.3;
 var lumberJackSpawnRate = 0.05;
 var bearSpawnRate = 0.02;
-var saplingSpawnRate=0.1;
+var saplingSpawnRate=0.05;
 
 //Global Vars
-var treeLifeList = new Array(boardN*boardN);
-var saplingLifeList = new Array(boardN*boardN);
+var treeLifeList = new Array(boardN);
+for( var i=0;i<boardN;i++) {
+		treeLifeList[i] = new Array(boardN);
+}
+var saplingLifeList = new Array(boardN);
+for( var i=0;i<boardN;i++) {
+		saplingLifeList[i] = new Array(boardN);
+}
 var dim = blockSize*boardN;
 var incVal = 0.5;
 var forest;
@@ -93,31 +99,43 @@ function drawForest () {
 	}
 }
 
-function updateTreeLifeList () {
-	var treeCounter=0;
-	for(var i = 0; i<boardN ; i++) {''
+function setTreeLifeList () {
+	for(var i = 0; i<boardN ; i++) {
 		for (var j = 0; j < boardN; j++) {
-			if (forest[i][j] == 'T') {
-				treeLifeList[treeCounter]={
-					ipos:i,
-					jpos:j,
-					lifeVal:0
-				}
-			}
-			treeCounter++;
+			treeLifeList[i][j]=0;
 		}
 	}
-	var saplingCounter=0;
-	for(var i = 0; i<boardN ; i++) {''
+	for(var i = 0; i<boardN ; i++) {
+		for (var j = 0; j < boardN; j++) {	
+			saplingLifeList[i][j]=0;
+		}
+	}
+}
+function updateTreeLifeList () {
+	for(var i = 0; i<boardN ; i++) {
+		for (var j = 0; j < boardN; j++) {
+			if (forest[i][j] == 'T') {
+				treeLifeList[i][j]++;
+			} else {
+				treeLifeList[i][j]=0;
+			}
+			if (treeLifeList[i][j]>119) {
+				forest[i][j] = 'E';
+				treeLifeList[i][j]=0;
+			}
+		}
+	}
+	for(var i = 0; i<boardN ; i++) {
 		for (var j = 0; j < boardN; j++) {
 			if (forest[i][j] == 'S') {
-				saplingLifeList[saplingCounter]={
-					ipos:i,
-					jpos:j,
-					lifeVal:0
-				}
+				saplingLifeList[i][j]++;
+			} else {
+				saplingLifeList[i][j]=0;
 			}
-		 	saplingCounter++;
+			if(saplingLifeList[i][j]>11) {
+				forest[i][j]='T';
+				saplingLifeList[i][j]=0;
+			}
 		}
 	}
 }
@@ -130,42 +148,43 @@ function getAdjacentSquares (x,y) {
 }
 function mainLoop () {
 	//Tree Logic
-	treeLifeList = new Array(boardN*boardN);
 	var squares;
-	var possibleSaplings = new Array(4);
+	var possibleSaplings=[];
 	for(var i = 0; i<boardN ; i++) {''
 		for (var j = 0; j < boardN; j++) {
 			if (forest[i][j] == 'T') {
 				squares = getAdjacentSquares(i,j);
+				possibleSaplings=[];
 				for(var k = 0; k<4 ; k++) {
 					if(squares[k]=='X') {
 						var addRelativePos = [0,0];
 						switch(k){
 							case 0:addRelativePos=[i,j-1]; break;
 							case 1:addRelativePos=[i,j+1]; break;
-							case 2:addRelativePos=[i-1,j]; break;
-							case 3:addRelativePos=[i+1,j]; break;
+							case 2:addRelativePos=[i+1,j]; break;
+							case 3:addRelativePos=[i-1,j]; break;
 						}
 						possibleSaplings.push(addRelativePos);
 					}
 				}
-				console.log(possibleSaplings);
 				var saplingCoords = possibleSaplings[Math.floor(Math.random()*possibleSaplings.length)];
 				if (saplingCoords != null && Math.random() < saplingSpawnRate) {
-					forest[saplingCoords[0]][saplingCoords[1]]='S';
+					if (forest[saplingCoords[0]][saplingCoords[1]]=='X') {
+						forest[saplingCoords[0]][saplingCoords[1]]='S';
+					}
 				}
 			}
 		}
 	}
+	updateTreeLifeList();
 	drawForest();
 	months++;
-	//document.getElementById("month_counter").innerHTML=("<h2>Months = "+ months +"</h2>");
+	document.getElementById("month_counter").innerHTML="Months = "+ months;
 }
-
 drawGrid()
 makeBoard();
+setTreeLifeList();
 initialSpawn();
 drawForest();
-updateTreeLifeList();
 mainLoop();
-setInterval(mainLoop,15000);
+setInterval(mainLoop,10);
