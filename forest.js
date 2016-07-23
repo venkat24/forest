@@ -7,17 +7,18 @@ canvas.width = 6000;
 canvas.height = 6000;
 var boardN = 150;
 var refreshRate = 20;
-var blockSize = 40;
+var blockSize = 10;
 
 //Spawn Rates
 var treeSpawnRate = 0.4;
 var lumberJackSpawnRate = 0.03;
-var bearSpawnRate = 0.0;
-var saplingSpawnRate=0.1;
+var bearSpawnRate = 0.01;
+var saplingSpawnRate=0.3;
 
 //Global Vars
 var treeLifeList = new Array(boardN);
 for( var i=0;i<boardN;i++) {
+	
 		treeLifeList[i] = new Array(boardN);
 }
 var saplingLifeList = new Array(boardN);
@@ -89,9 +90,9 @@ function drawForest () {
 				case 'S':
 					context.fillStyle = 'lightgreen'; break;
 				case 'L':
-					context.fillStyle = 'crimson'; break;
+					context.fillStyle = 'brown'; break;
 				case 'B':
-					context.fillStyle = 'turquoise'; break;
+					context.fillStyle = 'crimson'; break;
 				case 'X':
 					context.fillStyle = 'lightgray'; break;
 			}
@@ -212,6 +213,48 @@ function mainLoop () {
 						case 3:positionToMove=[i-1,j]; break;
 					}
 					forest[positionToMove[0]][positionToMove[1]]='L';
+					forest[i][j]='X';	
+				}
+			} else if (forest[i][j]=='B') {					//BEAR MECHANISM
+				availableBearSquares=getAdjacentSquares(i,j);
+				var maullableBearIndices = [];
+				var movableBearIndices = [];
+				var bearMaullingIndexPosition = 0;
+				var bearMovingIndexPosition = 0;
+				var positionToMaul = [0,0];
+				var positionToMoveBear = [0,0];
+				if (availableBearSquares.indexOf('L') >=0) {
+					for(var k=0; k<4; k++) {
+						if (availableBearSquares[k]=='L') {
+							maullableBearIndices.push(k);
+						}
+					}
+					bearMaullingIndexPosition = maullableBearIndices[Math.floor(Math.random()*maullableBearIndices.length)];
+					switch(bearMaullingIndexPosition) {
+							case 0:positionToMaul=[i,j-1]; break;
+							case 1:positionToMaul=[i,j+1]; break;
+							case 2:positionToMaul=[i+1,j]; break;
+							case 3:positionToMaul=[i-1,j]; break;
+					}
+					forest[positionToMaul[0]][positionToMaul[1]]='B';
+					forest[i][j]='X';
+				} else {
+					for(var k=0 ; k<4; k++ ) {
+						if(availableBearSquares[k] == 'X') {
+							movableBearIndices.push(k);
+						}
+					}
+					if (movableBearIndices === undefined || movableBearIndices.length === 0) {
+						continue;
+					}
+					bearMovingIndexPosition = movableBearIndices[Math.floor(Math.random()*movableBearIndices.length)];
+					switch(bearMovingIndexPosition){
+						case 0:positionToMoveBear=[i,j-1]; break;
+						case 1:positionToMoveBear=[i,j+1]; break;
+						case 2:positionToMoveBear=[i+1,j]; break;
+						case 3:positionToMoveBear=[i-1,j]; break;
+					}
+					forest[positionToMoveBear[0]][positionToMoveBear[1]]='B';
 					forest[i][j]='X';
 				}
 			}
